@@ -6,15 +6,16 @@ import (
 )
 
 type Todo struct {
-	task    string
-	endDate string
+	task        string
+	endDate     string
+	isCompleted bool
 }
 
 var todo_list []Todo
 
 var app = tview.NewApplication()
 
-var text = tview.NewTextView().SetTextColor(tcell.ColorGreen).SetText("(a) to add a new contact \n(q) to quit")
+var text = tview.NewTextView().SetTextColor(tcell.ColorGreen).SetText("(a) to add a new todo \n(I) to focus todo list \n(q) to quit")
 
 var form = tview.NewForm()
 var pages = tview.NewPages()
@@ -56,9 +57,14 @@ func setTodoText(todo *Todo) {
 }
 
 func main() {
+
+	TodoList.SetSelectedFunc(func(i int, s1, s2 string, r rune) {
+		setTodoText(&todo_list[i])
+	})
+
 	flex.SetDirection(tview.FlexRow).
+		AddItem(tview.NewTextView().SetTextColor(tcell.ColorGreen).SetText("To Do List"), 0, 1, false).
 		AddItem(tview.NewFlex().
-			AddItem(tview.NewTextView().SetTextColor(tcell.ColorGreen).SetText("To Do List"), 0, 1, false).
 			AddItem(TodoList, 0, 1, true).
 			AddItem(TodoTextView, 0, 2, false), 0, 4, false).
 		AddItem(text, 0, 1, false)
@@ -66,12 +72,15 @@ func main() {
 	pages.AddPage("Menu", flex, true, true).SetTitle("Menu")
 	pages.AddPage("Add Form", form, true, false).SetTitle("TodoForm")
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 113 {
+		switch event.Rune() {
+		case 113:
 			app.Stop()
-		} else if event.Rune() == 97 {
+		case 97:
 			form.Clear(true)
 			addTodoForm()
 			pages.SwitchToPage("Add Form")
+		case 73:
+			app.SetFocus(TodoList)
 		}
 		return event
 	})
